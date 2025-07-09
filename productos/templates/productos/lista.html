@@ -1,0 +1,154 @@
+{% load humanize %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Tienda Virtual</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <!-- Bootstrap 5 CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        body {
+    font-family: 'Poppins', sans-serif;
+}
+    .carousel-control-prev-icon,
+    .carousel-control-next-icon {
+      background-color: rgba(0, 0, 0, 0.6);
+      border-radius: 50%;
+      background-size: 60% 60%;
+      width: 3rem;
+      text-align: center;
+      height: 3rem;
+    }
+
+    .carousel-control-prev,
+    .carousel-control-next {
+      width: 12%;
+    }
+
+    .cinta-agotado {
+      position: absolute;
+      top: 12px;
+      right: -35px;
+      background-color: crimson;
+      color: white;
+      padding: 5px 55px;
+      transform: rotate(45deg);
+      font-weight: bold;
+      box-shadow: 0 0 10px rgba(0,0,0,0.3);
+      z-index: 1000;
+      font-size: 13px;
+      text-align: center;
+    }
+    </style>
+</head>
+<body class="bg-light">
+<h1 class="text-center mb-4">🛍️ Buscador de Productos</h1>
+<br>
+<div class="container mt-5">
+    <!-- Formulario de búsqueda y filtro -->
+    <form method="get" class="row mb-4">
+        <div class="col-md-4">
+            <select name="categoria" class="form-select">
+                <option value="">Todas las Marcas</option>
+                {% for cat in categorias %}
+                    <option value="{{ cat.id }}" {% if categoria_seleccionada == cat.id|stringformat:"s" %}selected{% endif %}>
+                        {{ cat.nombre }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-6">
+            <input type="text" name="q" placeholder="Buscar producto..." class="form-control" value="{{ busqueda }}">
+        </div>
+        <div class="col-md-2">
+            <button type="submit" class="btn btn-primary w-100">Buscar</button>
+        </div>
+    </form>
+
+    {% if productos %}
+        <div class="row">
+            {% for producto in productos %}
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 position-relative">
+
+                    <!-- Cinta AGOTADO -->
+                    {% if producto.stock == 0 %}
+                        <div class="cinta-agotado">AGOTADO</div>
+                    {% endif %}
+
+                    <!-- Carrusel de imágenes -->
+                    <div id="carousel{{ producto.id }}" class="carousel slide" data-bs-ride="carousel">
+                        <div class="carousel-inner">
+                            {% for img in producto.imagenes.all %}
+                                <div class="carousel-item {% if forloop.first %}active{% endif %}">
+                                    <img src="{{ img.imagen.url }}" class="d-block w-100" alt="Imagen de {{ producto.nombre }}">
+                                </div>
+                            {% empty %}
+                                <div class="carousel-item active">
+                                    <img src="https://via.placeholder.com/300x200?text=Sin+Imagen" class="d-block w-100" alt="Sin imagen">
+                                </div>
+                            {% endfor %}
+                        </div>
+                        {% if producto.imagenes.all.count > 1 %}
+                        <button class="carousel-control-prev" type="button" data-bs-target="#carousel{{ producto.id }}" data-bs-slide="prev">
+                            <span class="carousel-control-prev-icon"></span>
+                        </button>
+                        <button class="carousel-control-next" type="button" data-bs-target="#carousel{{ producto.id }}" data-bs-slide="next">
+                            <span class="carousel-control-next-icon"></span>
+                        </button>
+                        {% endif %}
+                    </div>
+
+                    <!-- Detalles del producto -->
+                    <div class="card-body d-flex flex-column text-center">
+                        <h5 class="card-title">{{ producto.nombre }}</h5>
+                        <p class="card-text">{{ producto.descripcion|truncatewords:20 }}</p>
+                        <p class="fw-bold text-success mb-3">Precio: ${{ producto.precio|floatformat:0|intcomma }}</p>
+                        
+
+                        {% if user.is_authenticated %}
+                            {% if producto.stock > 0 %}
+                                <a href="{% url 'agregar_al_carrito' producto.id %}" class="btn btn-primary mt-auto">Agregar al carrito</a>
+                            {% else %}
+                                <button class="btn btn-secondary mt-auto" disabled>No disponible</button>
+                            {% endif %}
+                        {% else %}
+                            <a href="{% url 'login' %}" class="btn btn-outline-secondary mt-auto">Inicia sesión para comprar</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="alert alert-warning text-center">
+            No hay productos disponibles.
+        </div>
+    {% endif %}
+</div>
+
+<!-- Botón fijo del carrito -->
+<div style="position: fixed; top: 20px; right: 20px; z-index: 9999;">
+    <a href="{% url 'ver_carrito' %}" class="btn btn-success shadow-sm position-relative">
+        🛒 Carrito
+        {% if cantidad_carrito > 0 %}
+            <span class="badge bg-danger position-absolute top-0 start-100 translate-middle">
+                {{ cantidad_carrito }}
+            </span>
+            <span class="badge bg-light text-dark ms-2">
+                ${{ total_carrito|floatformat:0|intcomma }}
+            </span>
+        {% else %}
+            <span class="badge bg-light text-dark ms-2">Vacío</span>
+        {% endif %}
+    </a>
+</div>
+
+
+<!-- Bootstrap Bundle JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
