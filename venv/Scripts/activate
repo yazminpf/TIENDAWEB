@@ -35,7 +35,7 @@ deactivate () {
 # unset irrelevant variables
 deactivate nondestructive
 
-VIRTUAL_ENV="C:\Users\ROMULOB\Documents\tiendaweb\venv"
+VIRTUAL_ENV="D:\Bootcamp\tiendaweb\venv"
 export VIRTUAL_ENV
 
 _OLD_VIRTUAL_PATH="$PATH"
